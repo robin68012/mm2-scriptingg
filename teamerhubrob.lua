@@ -7,41 +7,64 @@ gui.Name = "TeamerHubFanUI"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 250, 0, 160)
-frame.Position = UDim2.new(0, 20, 0.5, -80)
-frame.BackgroundColor3 = Color3.fromRGB(15,15,25)
+frame.Size = UDim2.new(0, 260, 0, 170)
+frame.Position = UDim2.new(0, 20, 0.5, -85)
+frame.BackgroundColor3 = Color3.fromRGB(10, 15, 25)
+frame.BackgroundTransparency = 0.15
 frame.BorderSizePixel = 0
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 16)
+
+-- Glow futuriste
+local uiStroke = Instance.new("UIStroke", frame)
+uiStroke.Thickness = 2
+uiStroke.Color = Color3.fromRGB(0, 255, 200)
+
+-- Dégradé néon
+local gradient = Instance.new("UIGradient", frame)
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0,200,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,255,150))
+}
+gradient.Rotation = 45
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1,0,0,40)
 title.BackgroundTransparency = 1
-title.Text = "Teamer Hub Fan"
+title.Text = "🌌 Teamer Hub Fan 🌌"
 title.TextColor3 = Color3.fromRGB(0,255,200)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
 
--- === Bouton Player Chams ===
-local chamsBtn = Instance.new("TextButton", frame)
-chamsBtn.Size = UDim2.new(1, -20, 0, 40)
-chamsBtn.Position = UDim2.new(0, 10, 0, 50)
-chamsBtn.BackgroundColor3 = Color3.fromRGB(30,30,45)
-chamsBtn.Text = "Player Chams: OFF"
-chamsBtn.TextColor3 = Color3.fromRGB(255,255,255)
-chamsBtn.Font = Enum.Font.GothamSemibold
-chamsBtn.TextSize = 16
-Instance.new("UICorner", chamsBtn).CornerRadius = UDim.new(0, 8)
+-- Fonction bouton design futuriste
+local function createButton(text, yPos)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(1, -30, 0, 40)
+    btn.Position = UDim2.new(0, 15, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(20,30,45)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamSemibold
+    btn.TextSize = 16
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
--- === Bouton Auto Grab GunDrop ===
-local gunDropBtn = Instance.new("TextButton", frame)
-gunDropBtn.Size = UDim2.new(1, -20, 0, 40)
-gunDropBtn.Position = UDim2.new(0, 10, 0, 100)
-gunDropBtn.BackgroundColor3 = Color3.fromRGB(30,30,45)
-gunDropBtn.Text = "Auto Grab GunDrop: OFF"
-gunDropBtn.TextColor3 = Color3.fromRGB(255,255,255)
-gunDropBtn.Font = Enum.Font.GothamSemibold
-gunDropBtn.TextSize = 16
-Instance.new("UICorner", gunDropBtn).CornerRadius = UDim.new(0, 8)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 1.5
+    stroke.Color = Color3.fromRGB(0,255,200)
+
+    btn.MouseEnter:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(0, 100, 80)
+    end)
+    btn.MouseLeave:Connect(function()
+        btn.BackgroundColor3 = Color3.fromRGB(20,30,45)
+    end)
+
+    return btn
+end
+
+-- Boutons
+local chamsBtn = createButton("Player Chams: OFF", 50)
+local gunDropBtn = createButton("Auto Grab GunDrop: OFF", 100)
 
 -- === INVENTAIRE → COULEUR ===
 local function getPlayerColor(plr)
@@ -99,7 +122,6 @@ end
 
 -- === TOGGLE PLAYER CHAMS ===
 local chamsEnabled = false
-
 local function refreshHighlights()
     for _, plr in ipairs(Players:GetPlayers()) do
         if chamsEnabled then
@@ -117,17 +139,13 @@ chamsBtn.MouseButton1Click:Connect(function()
         chamsBtn.BackgroundColor3 = Color3.fromRGB(0,150,100)
     else
         chamsBtn.Text = "Player Chams: OFF"
-        chamsBtn.BackgroundColor3 = Color3.fromRGB(30,30,45)
+        chamsBtn.BackgroundColor3 = Color3.fromRGB(20,30,45)
         refreshHighlights()
     end
 end)
 
 -- === AUTO-GRAB GUNDROP ===
-local humanoidRootPart = player.Character or player.CharacterAdded:Wait()
-humanoidRootPart = humanoidRootPart:WaitForChild("HumanoidRootPart")
-
 local autoGrabGun = false
-
 local function pickUp(tool)
     if tool:IsA("Tool") then
         tool.Parent = player.Backpack
@@ -136,9 +154,13 @@ local function pickUp(tool)
 end
 
 local function checkForGunDrop()
+    if not player.Character then return end
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
     for _, obj in ipairs(workspace:GetChildren()) do
         if obj:IsA("Tool") and obj.Name == "GunDrop" then
-            local distance = (humanoidRootPart.Position - obj.Position).Magnitude
+            local distance = (hrp.Position - obj.Position).Magnitude
             if distance < 15 then
                 pickUp(obj)
             end
@@ -153,17 +175,30 @@ gunDropBtn.MouseButton1Click:Connect(function()
         gunDropBtn.BackgroundColor3 = Color3.fromRGB(0,150,100)
     else
         gunDropBtn.Text = "Auto Grab GunDrop: OFF"
-        gunDropBtn.BackgroundColor3 = Color3.fromRGB(30,30,45)
+        gunDropBtn.BackgroundColor3 = Color3.fromRGB(20,30,45)
     end
 end)
 
 -- === AUTO REFRESH LOOP ===
-while true do
-    if chamsEnabled then
-        refreshHighlights()
+task.spawn(function()
+    while true do
+        if chamsEnabled then
+            refreshHighlights()
+        end
+        if autoGrabGun then
+            checkForGunDrop()
+        end
+        task.wait(2)
     end
-    if autoGrabGun then
-        checkForGunDrop()
+end)
+
+-- === TOGGLE UI AVEC CTRL ===
+local UserInputService = game:GetService("UserInputService")
+local uiVisible = true
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+        uiVisible = not uiVisible
+        frame.Visible = uiVisible
     end
-    task.wait(2)
-end
+end)

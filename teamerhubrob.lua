@@ -1,102 +1,96 @@
--- // Teamer Hub Fan UI //
--- Mets ce script dans StarterPlayerScripts
-
+--// Variables
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- UI LIB //
+--// UI principale
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "TeamerHubFan"
 ScreenGui.ResetOnSpawn = false
 
--- MAIN FRAME //
+--// Cadre principal
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 500, 0, 300)
 MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 
--- Glow border
-local UIStroke = Instance.new("UIStroke", MainFrame)
-UIStroke.Thickness = 2
-UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UIStroke.Color = Color3.fromRGB(0, 255, 170)
-
+-- Coin arrondi
 local UICorner = Instance.new("UICorner", MainFrame)
 UICorner.CornerRadius = UDim.new(0, 12)
 
--- TOGGLE WITH CTRL //
-local UIS = game:GetService("UserInputService")
-local uiVisible = true
-UIS.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.LeftControl then
-        uiVisible = not uiVisible
-        MainFrame.Visible = uiVisible
-    end
-end)
+-- Glow futuriste
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(0, 255, 200)
 
--- LEFT MENU (Tabs)
+--// Onglets
 local TabFrame = Instance.new("Frame", MainFrame)
 TabFrame.Size = UDim2.new(0, 120, 1, 0)
-TabFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
-TabFrame.BorderSizePixel = 0
+TabFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+Instance.new("UICorner", TabFrame).CornerRadius = UDim.new(0, 12)
 
-local UIListLayout = Instance.new("UIListLayout", TabFrame)
-UIListLayout.Padding = UDim.new(0, 5)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local TabList = Instance.new("UIListLayout", TabFrame)
+TabList.SortOrder = Enum.SortOrder.LayoutOrder
+TabList.Padding = UDim.new(0, 5)
 
--- RIGHT CONTENT
+-- Contenu
 local ContentFrame = Instance.new("Frame", MainFrame)
-ContentFrame.Size = UDim2.new(1, -120, 1, 0)
-ContentFrame.Position = UDim2.new(0, 120, 0, 0)
+ContentFrame.Size = UDim2.new(1, -130, 1, -10)
+ContentFrame.Position = UDim2.new(0, 130, 0, 5)
 ContentFrame.BackgroundTransparency = 1
 
--- Function to make a Tab Button
+--// Fonction de création d’onglets
+local sections = {}
 local function CreateTab(name)
     local btn = Instance.new("TextButton", TabFrame)
     btn.Size = UDim2.new(1, -10, 0, 30)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
-    btn.TextColor3 = Color3.fromRGB(0, 255, 170)
     btn.Text = name
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.AutoButtonColor = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
 
-    local UIC = Instance.new("UICorner", btn)
-    UIC.CornerRadius = UDim.new(0, 8)
+    local section = Instance.new("Frame", ContentFrame)
+    section.Size = UDim2.new(1, 0, 1, 0)
+    section.Visible = false
+    section.BackgroundTransparency = 1
 
-    return btn
+    local list = Instance.new("UIListLayout", section)
+    list.Padding = UDim.new(0, 5)
+    list.SortOrder = Enum.SortOrder.LayoutOrder
+
+    sections[name] = section
+
+    btn.MouseButton1Click:Connect(function()
+        for _, sec in pairs(ContentFrame:GetChildren()) do
+            if sec:IsA("Frame") then sec.Visible = false end
+        end
+        section.Visible = true
+    end)
+
+    return section
 end
 
--- Function to create a section
-local function CreateSection(name)
-    local frame = Instance.new("Frame", ContentFrame)
-    frame.Size = UDim2.new(1, -10, 1, -10)
-    frame.Position = UDim2.new(0, 5, 0, 5)
-    frame.Visible = false
+-- Onglets
+local mainTab = CreateTab("Main")
+local playerTab = CreateTab("Player")
+local miscTab = CreateTab("Misc")
+local rolesTab = CreateTab("Roles")
 
-    local layout = Instance.new("UIListLayout", frame)
-    layout.Padding = UDim.new(0, 5)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
+sections["Main"].Visible = true -- onglet par défaut
 
-    return frame
-end
-
--- Function to make toggle buttons
+--// Fonction boutons toggle
 local function CreateToggle(parent, text, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0, 200, 0, 30)
-    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 45)
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.Text = text .. " [OFF]"
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-
-    local UIC = Instance.new("UICorner", btn)
-    UIC.CornerRadius = UDim.new(0, 6)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
     local state = false
     btn.MouseButton1Click:Connect(function()
@@ -106,42 +100,20 @@ local function CreateToggle(parent, text, callback)
     end)
 end
 
--- Create tabs
-local tabs = {
-    Main = CreateTab("Main"),
-    Player = CreateTab("Player"),
-    Misc = CreateTab("Misc"),
-    Roles = CreateTab("Roles"),
-}
-
-local sections = {
-    Main = CreateSection("Main"),
-    Player = CreateSection("Player"),
-    Misc = CreateSection("Misc"),
-    Roles = CreateSection("Roles"),
-}
-
--- Switch tab function
-for name, tab in pairs(tabs) do
-    tab.MouseButton1Click:Connect(function()
-        for _, sec in pairs(sections) do
-            sec.Visible = false
-        end
-        sections[name].Visible = true
-    end)
-end
-sections.Main.Visible = true
-
--- // FEATURES // --
+--// Features
+local antiFling, chams, autoGrab
 
 -- Anti-Fling
-local antiFling
-CreateToggle(sections.Player, "Anti-Fling", function(state)
+CreateToggle(playerTab, "Anti-Fling", function(state)
     if state then
         antiFling = RunService.Heartbeat:Connect(function()
             for _, plr in pairs(Players:GetPlayers()) do
                 if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    plr.Character.HumanoidRootPart.Velocity = Vector3.new(0,0,0)
+                    local hrp = plr.Character.HumanoidRootPart
+                    hrp.Velocity = Vector3.zero
+                    hrp.RotVelocity = Vector3.zero
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    hrp.AssemblyAngularVelocity = Vector3.zero
                 end
             end
         end)
@@ -151,8 +123,7 @@ CreateToggle(sections.Player, "Anti-Fling", function(state)
 end)
 
 -- Player Chams
-local chams
-CreateToggle(sections.Misc, "Player Chams", function(state)
+CreateToggle(miscTab, "Player Chams", function(state)
     if state then
         chams = RunService.Heartbeat:Connect(function()
             for _, plr in pairs(Players:GetPlayers()) do
@@ -163,15 +134,17 @@ CreateToggle(sections.Misc, "Player Chams", function(state)
                     highlight.OutlineTransparency = 0
                     highlight.Parent = plr.Character
 
-                    -- check inventory
+                    -- gris par défaut
                     local color = Color3.fromRGB(150,150,150)
-                    if plr.Backpack:FindFirstChild("Knife") then
+
+                    if plr.Backpack:FindFirstChild("Knife") or plr.Character:FindFirstChild("Knife") then
                         color = Color3.fromRGB(255,0,0)
-                    elseif plr.Backpack:FindFirstChild("Gun") then
+                    elseif plr.Backpack:FindFirstChild("Gun") or plr.Character:FindFirstChild("Gun") then
                         color = Color3.fromRGB(0,0,255)
-                    elseif plr.Backpack:FindFirstChild("Sheriff") then
+                    elseif plr.Backpack:FindFirstChild("Revolver") or plr.Character:FindFirstChild("Revolver") then
                         color = Color3.fromRGB(0,255,0)
                     end
+
                     highlight.FillColor = color
                     highlight.OutlineColor = color
                 end
@@ -187,17 +160,23 @@ CreateToggle(sections.Misc, "Player Chams", function(state)
     end
 end)
 
--- Auto Grab GunDrop
-local grabGun
-CreateToggle(sections.Misc, "Auto Grab Gun", function(state)
+-- Auto Grab Gun
+CreateToggle(miscTab, "Auto Grab Gun", function(state)
     if state then
-        grabGun = RunService.Heartbeat:Connect(function()
+        autoGrab = RunService.Heartbeat:Connect(function()
             local gun = workspace:FindFirstChild("GunDrop")
-            if gun then
-                gun.Parent = LocalPlayer.Backpack
+            if gun and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = gun.CFrame
             end
         end)
     else
-        if grabGun then grabGun:Disconnect() end
+        if autoGrab then autoGrab:Disconnect() end
+    end
+end)
+
+--// Toggle UI avec Ctrl
+UserInputService.InputBegan:Connect(function(input, gp)
+    if input.KeyCode == Enum.KeyCode.LeftControl and not gp then
+        ScreenGui.Enabled = not ScreenGui.Enabled
     end
 end)

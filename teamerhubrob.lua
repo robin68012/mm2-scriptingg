@@ -1,155 +1,204 @@
--- ======================
--- 🛰️ Teamer Hub Fan (All in one)
--- ======================
+--// Teamer Hub Fan UI Futuriste
+--// Mets ce LocalScript dans StarterPlayerScripts
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
--- === Setup Remote (coté serveur direct via LocalScript) ===
-local GrabGunRemote = ReplicatedStorage:FindFirstChild("GrabGun")
-if not GrabGunRemote then
-    GrabGunRemote = Instance.new("RemoteEvent")
-    GrabGunRemote.Name = "GrabGun"
-    GrabGunRemote.Parent = ReplicatedStorage
+-- ScreenGui
+local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+gui.Name = "TeamerHubFan"
+gui.ResetOnSpawn = false
 
-    -- Script serveur dynamique
-    GrabGunRemote.OnServerEvent:Connect(function(plr, gun)
-        if gun and gun:IsDescendantOf(workspace) and gun.Name == "GunDrop" then
-            local tool = Instance.new("Tool")
-            tool.Name = "Gun"
-            tool.RequiresHandle = false
-            tool.Parent = plr.Backpack
-            gun:Destroy()
-        end
+-- Frame Principal
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 400, 0, 250)
+mainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 25, 40)
+mainFrame.Active = true
+mainFrame.Draggable = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke", mainFrame)
+stroke.Thickness = 2
+stroke.Color = Color3.fromRGB(0, 255, 200)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Gradient
+local grad = Instance.new("UIGradient", mainFrame)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 200, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 150))
+}
+grad.Rotation = 45
+
+-- Liste onglets
+local tabList = Instance.new("Frame", mainFrame)
+tabList.Size = UDim2.new(0, 100, 1, 0)
+tabList.BackgroundColor3 = Color3.fromRGB(15, 20, 35)
+Instance.new("UICorner", tabList).CornerRadius = UDim.new(0, 10)
+
+-- Contenu onglets
+local contentFrame = Instance.new("Frame", mainFrame)
+contentFrame.Size = UDim2.new(1, -110, 1, -10)
+contentFrame.Position = UDim2.new(0, 110, 0, 5)
+contentFrame.BackgroundColor3 = Color3.fromRGB(25, 30, 50)
+Instance.new("UICorner", contentFrame).CornerRadius = UDim.new(0, 10)
+
+-- Fonction création boutons onglets
+local tabs = {}
+local function createTab(name)
+    local btn = Instance.new("TextButton", tabList)
+    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, (#tabList:GetChildren()-1)*35)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 35, 60)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(0, 255, 200)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+    local frame = Instance.new("Frame", contentFrame)
+    frame.Size = UDim2.new(1, -10, 1, -10)
+    frame.Position = UDim2.new(0, 5, 0, 5)
+    frame.BackgroundTransparency = 1
+    frame.Visible = false
+
+    tabs[name] = frame
+
+    btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(tabs) do f.Visible = false end
+        frame.Visible = true
     end)
 end
 
--- === UI futuriste ===
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "TeamerHubFanUI"
-gui.ResetOnSpawn = false
+-- Onglets
+createTab("Main")
+createTab("Player")
+createTab("Misc")
+createTab("Roles")
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 230, 0, 180)
-frame.Position = UDim2.new(0.05, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(15, 20, 35)
-frame.BackgroundTransparency = 0.2
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+--=== PLAYER TAB ===
+local playerTab = tabs["Player"]
 
-local stroke = Instance.new("UIStroke", frame)
-stroke.Thickness = 2
-stroke.Color = Color3.fromRGB(0,255,200)
+-- Anti Fling toggle
+local antiFlingBtn = Instance.new("TextButton", playerTab)
+antiFlingBtn.Size = UDim2.new(0, 150, 0, 30)
+antiFlingBtn.Position = UDim2.new(0, 10, 0, 10)
+antiFlingBtn.BackgroundColor3 = Color3.fromRGB(50, 60, 90)
+antiFlingBtn.Text = "Anti Fling: OFF"
+antiFlingBtn.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", antiFlingBtn).CornerRadius = UDim.new(0, 6)
 
--- === Drag UI ===
-local dragging, dragInput, dragStart, startPos
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
-    end
-end)
-frame.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end end)
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                   startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+local antiFlingEnabled = false
+antiFlingBtn.MouseButton1Click:Connect(function()
+    antiFlingEnabled = not antiFlingEnabled
+    antiFlingBtn.Text = "Anti Fling: " .. (antiFlingEnabled and "ON" or "OFF")
 end)
 
--- === Helper pour boutons ===
-local function createButton(text, yPos)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(20,30,45)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 14
-    btn.AutoButtonColor = false
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Thickness = 1.5
-    stroke.Color = Color3.fromRGB(0,255,200)
-    return btn
-end
+RunService.Heartbeat:Connect(function()
+    if antiFlingEnabled then
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                if hrp.Velocity.Magnitude > 200 then
+                    hrp.Velocity = Vector3.zero
+                    hrp.RotVelocity = Vector3.zero
+                end
+            end
+        end
+    end
+end)
 
--- === Boutons ===
-local chamsBtn = createButton("Player Chams: OFF", 20)
-local gunDropBtn = createButton("Auto Grab Gun: OFF", 70)
+--=== MISC TAB ===
+local miscTab = tabs["Misc"]
+
+-- Player Chams
+local chamsBtn = Instance.new("TextButton", miscTab)
+chamsBtn.Size = UDim2.new(0, 150, 0, 30)
+chamsBtn.Position = UDim2.new(0, 10, 0, 10)
+chamsBtn.BackgroundColor3 = Color3.fromRGB(50, 60, 90)
+chamsBtn.Text = "Player Chams: OFF"
+chamsBtn.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", chamsBtn).CornerRadius = UDim.new(0, 6)
 
 local chamsEnabled = false
-local gunGrabEnabled = false
-
 chamsBtn.MouseButton1Click:Connect(function()
     chamsEnabled = not chamsEnabled
     chamsBtn.Text = "Player Chams: " .. (chamsEnabled and "ON" or "OFF")
 end)
 
-gunDropBtn.MouseButton1Click:Connect(function()
-    gunGrabEnabled = not gunGrabEnabled
-    gunDropBtn.Text = "Auto Grab Gun: " .. (gunGrabEnabled and "ON" or "OFF")
+-- Auto Grab Gun
+local grabBtn = Instance.new("TextButton", miscTab)
+grabBtn.Size = UDim2.new(0, 150, 0, 30)
+grabBtn.Position = UDim2.new(0, 10, 0, 50)
+grabBtn.BackgroundColor3 = Color3.fromRGB(50, 60, 90)
+grabBtn.Text = "Auto Grab Gun: OFF"
+grabBtn.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", grabBtn).CornerRadius = UDim.new(0, 6)
+
+local grabEnabled = false
+grabBtn.MouseButton1Click:Connect(function()
+    grabEnabled = not grabEnabled
+    grabBtn.Text = "Auto Grab Gun: " .. (grabEnabled and "ON" or "OFF")
 end)
 
--- === Player Chams ===
+-- Logic
 RunService.Heartbeat:Connect(function()
     if chamsEnabled then
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character then
-                local highlight = plr.Character:FindFirstChild("Highlight") or Instance.new("Highlight", plr.Character)
-                highlight.Adornee = plr.Character
-                highlight.OutlineTransparency = 0
-                highlight.FillTransparency = 0.5
-                
-                local hasKnife, hasGun = false, false
-                for _, tool in ipairs(plr.Backpack:GetChildren()) do
-                    if tool.Name:lower():find("knife") then hasKnife = true end
-                    if tool.Name:lower():find("gun") then hasGun = true end
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                if not hrp:FindFirstChild("Cham") then
+                    local b = Instance.new("BillboardGui", hrp)
+                    b.Name = "Cham"
+                    b.Size = UDim2.new(0, 100, 0, 20)
+                    b.AlwaysOnTop = true
+                    local txt = Instance.new("TextLabel", b)
+                    txt.Size = UDim2.new(1,0,1,0)
+                    txt.BackgroundTransparency = 1
+                    txt.Text = plr.Name
+                    txt.Font = Enum.Font.GothamBold
+                    txt.TextSize = 14
                 end
-                for _, tool in ipairs(plr.Character:GetChildren()) do
-                    if tool:IsA("Tool") and tool.Name:lower():find("knife") then hasKnife = true end
-                    if tool:IsA("Tool") and tool.Name:lower():find("gun") then hasGun = true end
-                end
-
-                if hasKnife then
-                    highlight.FillColor = Color3.fromRGB(255,0,0) -- rouge
-                elseif hasGun then
-                    highlight.FillColor = Color3.fromRGB(0,0,255) -- bleu
-                else
-                    highlight.FillColor = Color3.fromRGB(150,150,150) -- gris
-                end
+                local txt = hrp.Cham.TextLabel
+                local inv = plr.Backpack
+                local col = Color3.fromRGB(150,150,150)
+                if inv:FindFirstChild("Knife") then col = Color3.fromRGB(255,0,0)
+                elseif inv:FindFirstChild("Gun") then col = Color3.fromRGB(0,0,255)
+                elseif inv:FindFirstChild("A") then col = Color3.fromRGB(0,255,0) end
+                txt.TextColor3 = col
             end
         end
     else
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr.Character and plr.Character:FindFirstChild("Highlight") then
-                plr.Character.Highlight:Destroy()
+        for _,plr in pairs(Players:GetPlayers()) do
+            if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = plr.Character.HumanoidRootPart
+                if hrp:FindFirstChild("Cham") then hrp.Cham:Destroy() end
+            end
+        end
+    end
+
+    if grabEnabled then
+        local gun = workspace:FindFirstChild("GunDrop")
+        if gun then
+            -- ⚠️ Remplace "GrabGun" par le vrai RemoteEvent de ton jeu
+            local remote = ReplicatedStorage:FindFirstChild("GrabGun")
+            if remote then
+                remote:FireServer(gun)
             end
         end
     end
 end)
 
--- === Auto Grab GunDrop ===
-RunService.Heartbeat:Connect(function()
-    if gunGrabEnabled then
-        local gun = workspace:FindFirstChild("GunDrop")
-        if gun then
-            GrabGunRemote:FireServer(gun)
-        end
-    end
-end)
+-- Default tab
+tabs["Main"].Visible = true
 
--- === Toggle UI avec Ctrl ===
-UserInputService.InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == Enum.KeyCode.LeftControl then
-        frame.Visible = not frame.Visible
+-- Toggle UI avec Ctrl
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == Enum.KeyCode.LeftControl then
+        mainFrame.Visible = not mainFrame.Visible
     end
 end)

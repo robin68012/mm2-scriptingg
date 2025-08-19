@@ -1,469 +1,493 @@
--- Teamer Hub Fan - Futuristic UI (visual-only)
--- Place: StarterGui -> LocalScript
+-- MM2 Premium UI Only
+-- This is just a UI with no functionality
+-- For educational purposes only
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
-local pgui = player:WaitForChild("PlayerGui")
+-- Create UI container
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MM2PremiumUI"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
 
--- ============= THEME =============
-local THEME = {
-    bgDark = Color3.fromRGB(14, 14, 20),
-    bgPanel = Color3.fromRGB(22, 22, 32),
-    bgCard  = Color3.fromRGB(28, 28, 42),
-    text    = Color3.fromRGB(220, 225, 235),
-    sub     = Color3.fromRGB(150, 155, 170),
-    accent  = Color3.fromRGB(0, 230, 200),
-    accent2 = Color3.fromRGB(120, 70, 255),
-    stroke  = Color3.fromRGB(40, 45, 65),
-}
+-- UI Variables
+local GUI = {}
+GUI.MouseOffset = nil
+GUI.Dragging = false
 
--- ============= ROOT GUI =============
-local gui = Instance.new("ScreenGui")
-gui.Name = "TeamerHubFanUI"
-gui.ResetOnSpawn = false
-gui.Parent = pgui
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 18)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
 
--- Window (not full screen)
-local win = Instance.new("Frame")
-win.Size = UDim2.new(0, 760, 0, 470)
-win.Position = UDim2.new(0.5, -380, 0.5, -235)
-win.BackgroundColor3 = THEME.bgDark
-win.Parent = gui
-Instance.new("UICorner", win).CornerRadius = UDim.new(0, 14)
+-- Apply Rounded Corners
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
 
-local winStroke = Instance.new("UIStroke")
-winStroke.Color = THEME.stroke
-winStroke.Thickness = 2
-winStroke.Transparency = 0.4
-winStroke.Parent = win
+-- Apply Glow Effect
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(128, 0, 255)
+UIStroke.Thickness = 2
+UIStroke.Transparency = 0.2
+UIStroke.Parent = MainFrame
 
--- Subtle neon gradient
-local g = Instance.new("UIGradient", win)
-g.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 14, 26)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(16, 20, 30)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 24))
-}
-g.Rotation = 45
+-- Create Background Gradient
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 0, 40)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 0, 30))
+})
+UIGradient.Rotation = 135
+UIGradient.Parent = MainFrame
 
--- Top bar (drag handle)
-local top = Instance.new("Frame", win)
-top.Size = UDim2.new(1, 0, 0, 34)
-top.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-top.BorderSizePixel = 0
-Instance.new("UICorner", top).CornerRadius = UDim.new(0, 14)
+-- Header Frame
+local HeaderFrame = Instance.new("Frame")
+HeaderFrame.Name = "HeaderFrame"
+HeaderFrame.Size = UDim2.new(1, 0, 0, 40)
+HeaderFrame.BackgroundColor3 = Color3.fromRGB(15, 5, 25)
+HeaderFrame.BackgroundTransparency = 0.3
+HeaderFrame.BorderSizePixel = 0
+HeaderFrame.Parent = MainFrame
 
-local topStroke = Instance.new("UIStroke", top)
-topStroke.Color = THEME.stroke
-topStroke.Thickness = 1
-topStroke.Transparency = 0.6
+-- Header Corner Rounding
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = HeaderFrame
 
-local title = Instance.new("TextLabel", top)
-title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, -20, 1, 0)
-title.Position = UDim2.new(0, 12, 0, 0)
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Text = "Teamer Hub Fan"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-title.TextColor3 = THEME.text
+-- Title Text
+local TitleText = Instance.new("TextLabel")
+TitleText.Name = "TitleText"
+TitleText.Size = UDim2.new(0, 160, 0, 30)
+TitleText.Position = UDim2.new(0, 15, 0, 5)
+TitleText.BackgroundTransparency = 1
+TitleText.Font = Enum.Font.GothamBold
+TitleText.Text = "MM2 Premium"
+TitleText.TextSize = 18
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Parent = HeaderFrame
 
--- Dragging
-do
-    local dragging = false
-    local dragStart, startPos
-    top.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = i.Position
-            startPos = win.Position
-        end
-    end)
-    top.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
-    UserInputService.InputChanged:Connect(function(i)
-        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = i.Position - dragStart
-            win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
+-- Title Text Gradient
+local TitleGradient = Instance.new("UIGradient")
+TitleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(128, 0, 255))
+})
+TitleGradient.Parent = TitleText
 
--- Layout: sidebar + content
-local bar = Instance.new("Frame", win)
-bar.Size = UDim2.new(0, 190, 1, -34)
-bar.Position = UDim2.new(0, 0, 0, 34)
-bar.BackgroundColor3 = THEME.bgPanel
-bar.BorderSizePixel = 0
+-- Version Label
+local VersionLabel = Instance.new("TextLabel")
+VersionLabel.Name = "VersionLabel"
+VersionLabel.Size = UDim2.new(0, 50, 0, 20)
+VersionLabel.Position = UDim2.new(1, -60, 0, 10)
+VersionLabel.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+VersionLabel.Font = Enum.Font.GothamBold
+VersionLabel.Text = "v3.5"
+VersionLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+VersionLabel.TextSize = 12
+VersionLabel.Parent = HeaderFrame
 
-local barGrad = Instance.new("UIGradient", bar)
-barGrad.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 24, 36)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 28, 40))
-}
-barGrad.Rotation = 90
+-- Version Label Rounding
+local VersionCorner = Instance.new("UICorner")
+VersionCorner.CornerRadius = UDim.new(0, 8)
+VersionCorner.Parent = VersionLabel
 
-local barList = Instance.new("UIListLayout", bar)
-barList.Padding = UDim.new(0, 10)
-barList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-barList.VerticalAlignment = Enum.VerticalAlignment.Top
+-- Version Label Gradient
+local VersionGradient = Instance.new("UIGradient")
+VersionGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 140, 0))
+})
+VersionGradient.Rotation = 45
+VersionGradient.Parent = VersionLabel
 
--- Profile card bottom
-local profileCard = Instance.new("Frame", bar)
-profileCard.Size = UDim2.new(1, -20, 0, 60)
-profileCard.Position = UDim2.new(0, 10, 1, -70)
-profileCard.BackgroundColor3 = THEME.bgCard
-profileCard.AnchorPoint = Vector2.new(0,1)
-Instance.new("UICorner", profileCard).CornerRadius = UDim.new(0, 10)
-local pcStroke = Instance.new("UIStroke", profileCard)
-pcStroke.Color = THEME.stroke
-pcStroke.Transparency = 0.5
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 22, 0, 22)
+CloseButton.Position = UDim2.new(1, -25, 0, 9)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+CloseButton.Text = "×"  -- Close symbol
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.Parent = HeaderFrame
 
-local avatar = Instance.new("ImageLabel", profileCard)
-avatar.BackgroundTransparency = 1
-avatar.Size = UDim2.new(0, 36, 0, 36)
-avatar.Position = UDim2.new(0, 10, 0.5, -18)
-avatar.Image = "rbxassetid://4031889928" -- placeholder circle
-local avCorner = Instance.new("UICorner", avatar); avCorner.CornerRadius = UDim.new(1,0)
+-- Close Button Rounding
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
 
-local uname = Instance.new("TextLabel", profileCard)
-uname.BackgroundTransparency = 1
-uname.Size = UDim2.new(1, -60, 1, 0)
-uname.Position = UDim2.new(0, 56, 0, 0)
-uname.TextXAlignment = Enum.TextXAlignment.Left
-uname.Text = "@"..player.Name
-uname.Font = Enum.Font.GothamSemibold
-uname.TextSize = 14
-uname.TextColor3 = THEME.sub
+-- Content Container
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, -30, 1, -55)
+ContentFrame.Position = UDim2.new(0, 15, 0, 45)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
 
--- Menu buttons
-local sections = {"Main","Target","Misc","Roles","Webhook","Player","Settings"}
+-- Divider Line
+local Divider = Instance.new("Frame")
+Divider.Name = "Divider"
+Divider.Size = UDim2.new(1, 0, 0, 1)
+Divider.Position = UDim2.new(0, 0, 0, 0)
+Divider.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+Divider.BackgroundTransparency = 0.7
+Divider.BorderSizePixel = 0
+Divider.Parent = ContentFrame
 
-local function makeMenuButton(text, selected)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(1, -20, 0, 36)
-    b.BackgroundColor3 = THEME.bgCard
-    b.Text = text
-    b.TextColor3 = selected and THEME.accent or THEME.text
-    b.Font = Enum.Font.GothamSemibold
-    b.TextSize = 15
-    b.AutoButtonColor = false
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
-    local s = Instance.new("UIStroke", b)
-    s.Color = THEME.stroke
-    s.Transparency = 0.5
-    -- hover
-    b.MouseEnter:Connect(function()
-        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(34, 34, 52)}):Play()
-    end)
-    b.MouseLeave:Connect(function()
-        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = THEME.bgCard}):Play()
-    end)
-    return b
-end
-
--- Right content
-local content = Instance.new("Frame", win)
-content.Size = UDim2.new(1, -190, 1, -34)
-content.Position = UDim2.new(0, 190, 0, 34)
-content.BackgroundTransparency = 1
-
--- Section header
-local header = Instance.new("TextLabel", content)
-header.BackgroundTransparency = 1
-header.Size = UDim2.new(1, -20, 0, 30)
-header.Position = UDim2.new(0, 10, 0, 8)
-header.TextXAlignment = Enum.TextXAlignment.Left
-header.Font = Enum.Font.GothamBold
-header.TextSize = 18
-header.TextColor3 = THEME.text
-header.Text = "Main"
-
--- Card container (like your screenshots)
-local card = Instance.new("Frame", content)
-card.Size = UDim2.new(1, -40, 1, -70)
-card.Position = UDim2.new(0, 20, 0, 45)
-card.BackgroundColor3 = THEME.bgPanel
-Instance.new("UICorner", card).CornerRadius = UDim.new(0, 14)
-local cardStroke = Instance.new("UIStroke", card)
-cardStroke.Color = THEME.stroke
-cardStroke.Transparency = 0.35
-
--- List layout inside card
-local cardList = Instance.new("UIListLayout", card)
-cardList.Padding = UDim.new(0, 10)
-cardList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-cardList.VerticalAlignment = Enum.VerticalAlignment.Top
-
-local function hr(parent)
-    local line = Instance.new("Frame", parent)
-    line.Size = UDim2.new(1, -32, 0, 1)
-    line.Position = UDim2.new(0, 16, 0, 0)
-    line.BackgroundColor3 = THEME.stroke
-    line.BackgroundTransparency = 0.2
-end
-
--- ========== UI Components (visual only) ==========
-local function ToggleRow(parent, labelText, locked)
-    local row = Instance.new("Frame", parent)
-    row.Size = UDim2.new(1, -32, 0, 38)
-    row.BackgroundColor3 = THEME.bgCard
-    row.BorderSizePixel = 0
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
-
-    local label = Instance.new("TextLabel", row)
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, -80, 1, 0)
-    label.Position = UDim2.new(0, 12, 0, 0)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Text = labelText .. (locked and "  🔒" or "")
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 15
-    label.TextColor3 = THEME.text
-
-    -- switch
-    local switch = Instance.new("TextButton", row)
-    switch.Size = UDim2.new(0, 54, 0, 24)
-    switch.Position = UDim2.new(1, -66, 0.5, -12)
-    switch.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    switch.AutoButtonColor = false
-    switch.Text = ""
-    Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
-
-    local knob = Instance.new("Frame", switch)
-    knob.Size = UDim2.new(0, 20, 0, 20)
-    knob.Position = UDim2.new(0, 2, 0.5, -10)
-    knob.BackgroundColor3 = Color3.fromRGB(210, 210, 230)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
-
-    local enabled = false
-    local function setState(on)
-        enabled = on
-        TweenService:Create(switch, TweenInfo.new(0.18), {
-            BackgroundColor3 = on and THEME.accent or Color3.fromRGB(60,60,80)
-        }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.18), {
-            Position = on and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
-        }):Play()
+-- Feature Functions - Create toggle UI only
+local function CreateToggle(name, position, startEnabled)
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Name = name .. "Toggle"
+    ToggleFrame.Size = UDim2.new(1, 0, 0, 36)
+    ToggleFrame.Position = position
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(30, 10, 40)
+    ToggleFrame.BackgroundTransparency = 0.6
+    ToggleFrame.Parent = ContentFrame
+    
+    -- Toggle Frame Rounding
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(0, 8)
+    ToggleCorner.Parent = ToggleFrame
+    
+    -- Toggle Label
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Name = "Label"
+    ToggleLabel.Size = UDim2.new(0, 200, 1, 0)
+    ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Font = Enum.Font.Gotham
+    ToggleLabel.Text = name
+    ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleLabel.TextSize = 14
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ToggleLabel.Parent = ToggleFrame
+    
+    -- Toggle Switch
+    local SwitchFrame = Instance.new("Frame")
+    SwitchFrame.Name = "SwitchFrame"
+    SwitchFrame.Size = UDim2.new(0, 44, 0, 22)
+    SwitchFrame.Position = UDim2.new(1, -55, 0.5, -11)
+    SwitchFrame.BackgroundColor3 = startEnabled and Color3.fromRGB(128, 0, 255) or Color3.fromRGB(40, 40, 60)
+    SwitchFrame.Parent = ToggleFrame
+    
+    -- Switch Rounding
+    local SwitchCorner = Instance.new("UICorner")
+    SwitchCorner.CornerRadius = UDim.new(1, 0)
+    SwitchCorner.Parent = SwitchFrame
+    
+    -- Toggle Knob
+    local ToggleKnob = Instance.new("Frame")
+    ToggleKnob.Name = "Knob"
+    ToggleKnob.Size = UDim2.new(0, 18, 0, 18)
+    ToggleKnob.Position = startEnabled and UDim2.new(0, 23, 0, 2) or UDim2.new(0, 3, 0, 2)
+    ToggleKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleKnob.Parent = SwitchFrame
+    
+    -- Knob Rounding
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0)
+    KnobCorner.Parent = ToggleKnob
+    
+    -- If enabled, add the active gradient
+    if startEnabled then
+        local SwitchGradient = Instance.new("UIGradient")
+        SwitchGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+        })
+        SwitchGradient.Parent = SwitchFrame
     end
-    setState(false)
-    switch.MouseButton1Click:Connect(function()
-        if locked then return end -- locked visual
-        setState(not enabled)
-    end)
-
-    return row
-end
-
-local function SliderRow(parent, labelText, defaultValue)
-    local row = Instance.new("Frame", parent)
-    row.Size = UDim2.new(1, -32, 0, 60)
-    row.BackgroundColor3 = THEME.bgCard
-    row.BorderSizePixel = 0
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
-
-    local label = Instance.new("TextLabel", row)
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, -70, 0, 20)
-    label.Position = UDim2.new(0, 12, 0, 6)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Text = labelText
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 15
-    label.TextColor3 = THEME.text
-
-    local value = Instance.new("TextLabel", row)
-    value.BackgroundTransparency = 1
-    value.Size = UDim2.new(0, 40, 0, 20)
-    value.Position = UDim2.new(1, -50, 0, 6)
-    value.Text = tostring(defaultValue or 0)
-    value.Font = Enum.Font.GothamSemibold
-    value.TextSize = 14
-    value.TextColor3 = THEME.sub
-
-    local bar = Instance.new("Frame", row)
-    bar.Size = UDim2.new(1, -24, 0, 6)
-    bar.Position = UDim2.new(0, 12, 0, 36)
-    bar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    bar.BorderSizePixel = 0
-    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
-
-    local fill = Instance.new("Frame", bar)
-    fill.Size = UDim2.new((defaultValue or 0)/100, 0, 1, 0)
-    fill.BackgroundColor3 = THEME.accent2
-    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-
-    local dragging = false
-    bar.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
-    end)
-    bar.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
-    bar.InputChanged:Connect(function(i)
-        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-            local rel = math.clamp((i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X, 0, 1)
-            fill.Size = UDim2.new(rel, 0, 1, 0)
-            value.Text = tostring(math.floor(rel*100))
-        end
-    end)
-
-    return row
-end
-
-local function DropdownRow(parent, labelText, placeholder)
-    local row = Instance.new("Frame", parent)
-    row.Size = UDim2.new(1, -32, 0, 38)
-    row.BackgroundColor3 = THEME.bgCard
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
-    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
-
-    local label = Instance.new("TextLabel", row)
-    label.BackgroundTransparency = 1
-    label.Size = UDim2.new(1, -60, 1, 0)
-    label.Position = UDim2.new(0, 12, 0, 0)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Text = (placeholder and (labelText.." • "..placeholder)) or labelText
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 15
-    label.TextColor3 = THEME.text
-
-    local grid = Instance.new("TextLabel", row)
-    grid.BackgroundTransparency = 1
-    grid.Size = UDim2.new(0, 28, 0, 28)
-    grid.Position = UDim2.new(1, -38, 0.5, -14)
-    grid.Text = "▦"
-    grid.TextSize = 18
-    grid.TextColor3 = THEME.sub
-    grid.Font = Enum.Font.GothamBold
-
-    return row
-end
-
--- ========== BUILD SECTIONS ==========
-local panels = {} -- [name] = function to (re)build rows
-
-local function clearCard()
-    for _,c in ipairs(card:GetChildren()) do
-        if c:IsA("GuiObject") then c:Destroy() end
-    end
-    -- re-add layout
-    cardList = Instance.new("UIListLayout", card)
-    cardList.Padding = UDim.new(0, 10)
-end
-
-panels.Main = function()
-    header.Text = "Main"
-    clearCard()
-    ToggleRow(card, "Auto Farm", false)
-    DropdownRow(card, "Farm Mode", "Nearest")
-    ToggleRow(card, "Automatically Grab Gun", false)
-    ToggleRow(card, "Dodge Thrown Knife", true) -- locked visuel
-    ToggleRow(card, "Auto End Round", false)
-    hr(card)
-    DropdownRow(card, "Teleport To Lobby", nil)
-    DropdownRow(card, "Teleport To Map", nil)
-end
-
-panels.Target = function()
-    header.Text = "Target"
-    clearCard()
-    DropdownRow(card, "Target", "username")
-    ToggleRow(card, "Fling Target", false)
-    ToggleRow(card, "Spectate Target", false)
-    ToggleRow(card, "Loop Go To Target", false)
-    DropdownRow(card, "Teleport To Target", nil)
-end
-
-panels.Misc = function()
-    header.Text = "Misc"
-    clearCard()
-    ToggleRow(card, "Player Chams", false)
-    ToggleRow(card, "Gun Cham", false)
-    ToggleRow(card, "3DRendering", false)
-    ToggleRow(card, "Name ESP", false)
-    hr(card)
-    DropdownRow(card, "Emote", "ninja")
-    ToggleRow(card, "Auto Emote", false)
-end
-
-panels.Roles = function()
-    header.Text = "Roles"
-    clearCard()
-    ToggleRow(card, "Kill Aura", false)
-    SliderRow(card, "Aura Distance", 5)
-    ToggleRow(card, "Auto Kill All", false)
-    ToggleRow(card, "Silent Aim", false)
-    ToggleRow(card, "Kill Murderer [Locked]", true)
-    ToggleRow(card, "Auto Shoot Murderer", false)
-    DropdownRow(card, "Shoot Murderer", nil)
-end
-
-panels.Webhook = function()
-    header.Text = "Webhook"
-    clearCard()
-    DropdownRow(card, "Webhook", "Webhook")
-    hr(card)
-    ToggleRow(card, "Coin Tracker", false)
-    DropdownRow(card, "Minutes To Send Webhook", "minutes")
-    ToggleRow(card, "Unbox Notification [Locked]", true)
-end
-
-panels.Player = function()
-    header.Text = "Player"
-    clearCard()
-    ToggleRow(card, "Walk Speed", false)
-    SliderRow(card, "Walk Speed", 16)
-    ToggleRow(card, "Jump Power", false)
-    SliderRow(card, "Jump Power", 50)
-    hr(card)
-    ToggleRow(card, "Invisible [FE] [Locked]", true)
-    ToggleRow(card, "Anti Fling", false)
-end
-
-panels.Settings = function()
-    header.Text = "Settings"
-    clearCard()
-    ToggleRow(card, "Auto Save Settings", false)
-    ToggleRow(card, "Auto ReExecute", false)
-    ToggleRow(card, "Auto Rejoin", false)
-    DropdownRow(card, "Rejoin Server", nil)
-    DropdownRow(card, "Server Hop", nil)
-    DropdownRow(card, "Donate", nil)
-end
-
--- Create menu and navigation
-local current = "Main"
-for i,sec in ipairs(sections) do
-    local b = makeMenuButton(sec, sec == current)
-    b.Parent = bar
-    b.MouseButton1Click:Connect(function()
-        -- recolor all
-        for _,btn in ipairs(bar:GetChildren()) do
-            if btn:IsA("TextButton") then
-                btn.TextColor3 = THEME.text
+    
+    -- Make the toggle interactive
+    ToggleFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            
+            local enabled = ToggleKnob.Position.X.Offset > 10
+                
+            if enabled then
+                -- Turn off
+                ToggleKnob:TweenPosition(UDim2.new(0, 3, 0, 2), "Out", "Sine", 0.15, true)
+                SwitchFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+                
+                if SwitchFrame:FindFirstChild("UIGradient") then
+                    SwitchFrame:FindFirstChild("UIGradient"):Destroy()
+                end
+            else
+                -- Turn on
+                ToggleKnob:TweenPosition(UDim2.new(0, 23, 0, 2), "Out", "Sine", 0.15, true)
+                SwitchFrame.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+                
+                local SwitchGradient = Instance.new("UIGradient")
+                SwitchGradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 255)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+                })
+                SwitchGradient.Parent = SwitchFrame
             end
         end
-        b.TextColor3 = THEME.accent
-        current = sec
-        panels[sec]()
+    end)
+    
+    return ToggleFrame
+end
+
+-- Create Feature Toggles
+local Toggle1 = CreateToggle("AUTO ACCEPT", UDim2.new(0, 0, 0, 10), true)
+local Toggle2 = CreateToggle("FREEZE VICTIM'S SCREEN", UDim2.new(0, 0, 0, 56), false)
+local Toggle3 = CreateToggle("DUPE ALL", UDim2.new(0, 0, 0, 102), false)
+
+-- Divider Line 2
+local Divider2 = Instance.new("Frame")
+Divider2.Name = "Divider2"
+Divider2.Size = UDim2.new(1, 0, 0, 1)
+Divider2.Position = UDim2.new(0, 0, 0, 148)
+Divider2.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+Divider2.BackgroundTransparency = 0.7
+Divider2.BorderSizePixel = 0
+Divider2.Parent = ContentFrame
+
+-- Weapon Spawner Section
+local SpawnerTitle = Instance.new("TextLabel")
+SpawnerTitle.Name = "SpawnerTitle"
+SpawnerTitle.Size = UDim2.new(1, 0, 0, 30)
+SpawnerTitle.Position = UDim2.new(0, 0, 0, 158)
+SpawnerTitle.BackgroundTransparency = 1
+SpawnerTitle.Font = Enum.Font.GothamBold
+SpawnerTitle.Text = "KNIFE/GUN SPAWNER"
+SpawnerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpawnerTitle.TextSize = 14
+SpawnerTitle.Parent = ContentFrame
+
+-- Weapon Selection - UI Only
+local function CreateWeaponButton(name, position)
+    local WeaponButton = Instance.new("TextButton")
+    WeaponButton.Name = name .. "Button"
+    WeaponButton.Size = UDim2.new(0.48, 0, 0, 30)
+    WeaponButton.Position = position
+    WeaponButton.BackgroundColor3 = Color3.fromRGB(40, 15, 60)
+    WeaponButton.Font = Enum.Font.Gotham
+    WeaponButton.Text = name
+    WeaponButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    WeaponButton.TextSize = 12
+    WeaponButton.Parent = ContentFrame
+    
+    -- Button Rounding
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.Parent = WeaponButton
+    
+    -- Button Stroke
+    local ButtonStroke = Instance.new("UIStroke")
+    ButtonStroke.Color = Color3.fromRGB(128, 0, 255)
+    ButtonStroke.Transparency = 0.7
+    ButtonStroke.Thickness = 1
+    ButtonStroke.Parent = WeaponButton
+    
+    -- Button hover effects
+    WeaponButton.MouseEnter:Connect(function()
+        WeaponButton.BackgroundColor3 = Color3.fromRGB(60, 25, 90)
+    end)
+    
+    WeaponButton.MouseLeave:Connect(function()
+        WeaponButton.BackgroundColor3 = Color3.fromRGB(40, 15, 60)
+    end)
+    
+    -- Button click visual effect
+    WeaponButton.MouseButton1Click:Connect(function()
+        WeaponButton.BackgroundColor3 = Color3.fromRGB(80, 30, 120)
+        WeaponButton.Text = "SPAWNED!"
+        
+        -- Reset after a moment
+        task.wait(1)
+        WeaponButton.Text = name
+        WeaponButton.BackgroundColor3 = Color3.fromRGB(40, 15, 60)
+    end)
+    
+    return WeaponButton
+end
+
+-- Create weapon buttons in a grid
+local weapons = {
+    {name = "Godly Knife", row = 0, col = 0},
+    {name = "Godly Gun", row = 0, col = 1},
+    {name = "Chroma Knife", row = 1, col = 0},
+    {name = "Chroma Gun", row = 1, col = 1},
+    {name = "Ancient", row = 2, col = 0},
+    {name = "Vintage", row = 2, col = 1}
+}
+
+for _, weapon in ipairs(weapons) do
+    local posX = weapon.col * 0.52
+    local posY = 195 + (weapon.row * 35)
+    CreateWeaponButton(weapon.name, UDim2.new(posX, 0, 0, posY))
+end
+
+-- Premium Badge
+local PremiumBadge = Instance.new("Frame")
+PremiumBadge.Name = "PremiumBadge"
+PremiumBadge.Size = UDim2.new(0, 12, 0, 12)
+PremiumBadge.Position = UDim2.new(0, 2, 0, 2)
+PremiumBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+PremiumBadge.Parent = HeaderFrame
+
+-- Badge Corner
+local BadgeCorner = Instance.new("UICorner")
+BadgeCorner.CornerRadius = UDim.new(1, 0)
+BadgeCorner.Parent = PremiumBadge
+
+-- Activate Button
+local ActivateButton = Instance.new("TextButton")
+ActivateButton.Name = "ActivateButton"
+ActivateButton.Size = UDim2.new(1, 0, 0, 36)
+ActivateButton.Position = UDim2.new(0, 0, 0, 298)
+ActivateButton.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+ActivateButton.Font = Enum.Font.GothamBold
+ActivateButton.Text = "ACTIVATE PREMIUM"
+ActivateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActivateButton.TextSize = 16
+ActivateButton.Parent = ContentFrame
+
+-- Button Corner
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 8)
+ButtonCorner.Parent = ActivateButton
+
+-- Button Gradient
+local ButtonGradient = Instance.new("UIGradient")
+ButtonGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(128, 0, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 255))
+})
+ButtonGradient.Rotation = 45
+ButtonGradient.Parent = ActivateButton
+
+-- Button effects
+ActivateButton.MouseEnter:Connect(function()
+    ActivateButton.Size = UDim2.new(1, 4, 0, 38)
+    ActivateButton.Position = UDim2.new(0, -2, 0, 297)
+end)
+
+ActivateButton.MouseLeave:Connect(function()
+    ActivateButton.Size = UDim2.new(1, 0, 0, 36)
+    ActivateButton.Position = UDim2.new(0, 0, 0, 298)
+end)
+
+ActivateButton.MouseButton1Click:Connect(function()
+    ActivateButton.Text = "ACTIVATING..."
+    
+    -- Simulate activation (visual only)
+    task.wait(1.5)
+    ActivateButton.Text = "PREMIUM ACTIVATED"
+end)
+
+-- Make UI draggable for both PC and Mobile
+local UserInputService = game:GetService("UserInputService")
+
+HeaderFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        GUI.Dragging = true
+        
+        -- Calculate the offset from the input position to the frame position
+        local absolutePosition = HeaderFrame.AbsolutePosition
+        local inputPosition = input.Position
+        GUI.MouseOffset = UDim2.new(0, inputPosition.X - absolutePosition.X, 0, inputPosition.Y - absolutePosition.Y)
+        
+        -- Connect to the move event
+        local inputChanged
+        inputChanged = UserInputService.InputChanged:Connect(function(moveInput)
+            if moveInput.UserInputType == Enum.UserInputType.MouseMovement or moveInput.UserInputType == Enum.UserInputType.Touch then
+                if GUI.Dragging then
+                    -- Move the frame based on the mouse/touch position and the offset
+                    local framePosition = UDim2.new(0, moveInput.Position.X - GUI.MouseOffset.X.Offset, 0, moveInput.Position.Y - GUI.MouseOffset.Y.Offset)
+                    MainFrame.Position = framePosition
+                end
+            end
+        end)
+        
+        -- Connect to the end event
+        local inputEnded
+        inputEnded = UserInputService.InputEnded:Connect(function(endInput)
+            if (endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch) then
+                GUI.Dragging = false
+                inputChanged:Disconnect()
+                inputEnded:Disconnect()
+            end
+        end)
+    end
+end)
+
+-- Close button functionality
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Simple notification system
+local function CreateNotification(title, message, duration)
+    local NotificationFrame = Instance.new("Frame")
+    NotificationFrame.Name = "Notification"
+    NotificationFrame.Size = UDim2.new(0, 200, 0, 60)
+    NotificationFrame.Position = UDim2.new(1, -220, 0, 20)
+    NotificationFrame.BackgroundColor3 = Color3.fromRGB(30, 10, 40)
+    NotificationFrame.BorderSizePixel = 0
+    NotificationFrame.Parent = ScreenGui
+    
+    -- Notification Corner
+    local NotifCorner = Instance.new("UICorner")
+    NotifCorner.CornerRadius = UDim.new(0, 8)
+    NotifCorner.Parent = NotificationFrame
+    
+    -- Notification Stroke
+    local NotifStroke = Instance.new("UIStroke")
+    NotifStroke.Color = Color3.fromRGB(128, 0, 255)
+    NotifStroke.Thickness = 1
+    NotifStroke.Parent = NotificationFrame
+    
+    -- Notification Title
+    local NotifTitle = Instance.new("TextLabel")
+    NotifTitle.Name = "Title"
+    NotifTitle.Size = UDim2.new(1, -20, 0, 20)
+    NotifTitle.Position = UDim2.new(0, 10, 0, 5)
+    NotifTitle.BackgroundTransparency = 1
+    NotifTitle.Font = Enum.Font.GothamBold
+    NotifTitle.Text = title
+    NotifTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    NotifTitle.TextSize = 14
+    NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
+    NotifTitle.Parent = NotificationFrame
+    
+    -- Notification Message
+    local NotifMessage = Instance.new("TextLabel")
+    NotifMessage.Name = "Message"
+    NotifMessage.Size = UDim2.new(1, -20, 0, 30)
+    NotifMessage.Position = UDim2.new(0, 10, 0, 25)
+    NotifMessage.BackgroundTransparency = 1
+    NotifMessage.Font = Enum.Font.Gotham
+    NotifMessage.Text = message
+    NotifMessage.TextColor3 = Color3.fromRGB(200, 200, 200)
+    NotifMessage.TextSize = 12
+    NotifMessage.TextXAlignment = Enum.TextXAlignment.Left
+    NotifMessage.TextWrapped = true
+    NotifMessage.Parent = NotificationFrame
+    
+    -- Animate notification
+    NotificationFrame:TweenPosition(UDim2.new(1, -220, 0, 20), "Out", "Quad", 0.5, true)
+    
+    -- Auto remove
+    task.delay(duration or 3, function()
+        NotificationFrame:TweenPosition(UDim2.new(1, 20, 0, 20), "Out", "Quad", 0.5, true)
+        task.wait(0.5)
+        NotificationFrame:Destroy()
     end)
 end
 
--- initial panel
-panels[current]()
+-- Show welcome notification
+CreateNotification("MM2 Premium", "UI loaded successfully!", 3)
 
--- CTRL to hide/show UI (others scripts unaffected)
-local visible = true
-UserInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-        visible = not visible
-        gui.Enabled = visible
-    end
-end)
+-- Return the GUI instance
+return ScreenGui

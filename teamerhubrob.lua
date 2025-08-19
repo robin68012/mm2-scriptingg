@@ -1,257 +1,469 @@
---// Teamer Hub Rework (Eclipse-like) //--
--- Place in StarterGui > LocalScript
+-- Teamer Hub Fan - Futuristic UI (visual-only)
+-- Place: StarterGui -> LocalScript
 
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
-
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local pgui = player:WaitForChild("PlayerGui")
 
--- THEME (Eclipse style)
+-- ============= THEME =============
 local THEME = {
-    bg = Color3.fromRGB(20,20,20),
-    card = Color3.fromRGB(30,30,35),
-    stroke = Color3.fromRGB(50,50,60),
-    accent = Color3.fromRGB(0, 200, 255),
-    text = Color3.fromRGB(230,230,230),
-    sub = Color3.fromRGB(160,160,160),
-    green = Color3.fromRGB(0,255,100),
-    red = Color3.fromRGB(255,50,50),
-    blue = Color3.fromRGB(50,120,255),
-    gray = Color3.fromRGB(180,180,180)
+    bgDark = Color3.fromRGB(14, 14, 20),
+    bgPanel = Color3.fromRGB(22, 22, 32),
+    bgCard  = Color3.fromRGB(28, 28, 42),
+    text    = Color3.fromRGB(220, 225, 235),
+    sub     = Color3.fromRGB(150, 155, 170),
+    accent  = Color3.fromRGB(0, 230, 200),
+    accent2 = Color3.fromRGB(120, 70, 255),
+    stroke  = Color3.fromRGB(40, 45, 65),
 }
 
--- ScreenGui
+-- ============= ROOT GUI =============
 local gui = Instance.new("ScreenGui")
-gui.Name = "TeamerHubUI"
+gui.Name = "TeamerHubFanUI"
 gui.ResetOnSpawn = false
 gui.Parent = pgui
 
--- Window
+-- Window (not full screen)
 local win = Instance.new("Frame")
-win.Size = UDim2.new(0, 500, 0, 350)
-win.Position = UDim2.new(0.5,-250,0.5,-175)
-win.BackgroundColor3 = THEME.bg
+win.Size = UDim2.new(0, 760, 0, 470)
+win.Position = UDim2.new(0.5, -380, 0.5, -235)
+win.BackgroundColor3 = THEME.bgDark
 win.Parent = gui
-Instance.new("UICorner", win).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", win).CornerRadius = UDim.new(0, 14)
 
-local winStroke = Instance.new("UIStroke", win)
+local winStroke = Instance.new("UIStroke")
 winStroke.Color = THEME.stroke
 winStroke.Thickness = 2
+winStroke.Transparency = 0.4
+winStroke.Parent = win
+
+-- Subtle neon gradient
+local g = Instance.new("UIGradient", win)
+g.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(10, 14, 26)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(16, 20, 30)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 24))
+}
+g.Rotation = 45
+
+-- Top bar (drag handle)
+local top = Instance.new("Frame", win)
+top.Size = UDim2.new(1, 0, 0, 34)
+top.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+top.BorderSizePixel = 0
+Instance.new("UICorner", top).CornerRadius = UDim.new(0, 14)
+
+local topStroke = Instance.new("UIStroke", top)
+topStroke.Color = THEME.stroke
+topStroke.Thickness = 1
+topStroke.Transparency = 0.6
+
+local title = Instance.new("TextLabel", top)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, -20, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "Teamer Hub Fan"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.TextColor3 = THEME.text
 
 -- Dragging
 do
-    local dragging, dragStart, startPos
-    win.InputBegan:Connect(function(i)
+    local dragging = false
+    local dragStart, startPos
+    top.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = i.Position
             startPos = win.Position
         end
     end)
-    win.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
+    top.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
     end)
     UserInputService.InputChanged:Connect(function(i)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = i.Position - dragStart
-            win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+delta.X, startPos.Y.Scale, startPos.Y.Offset+delta.Y)
+            win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 end
 
--- Title
-local title = Instance.new("TextLabel", win)
-title.Text = "Teamer Hub - Eclipse Style"
-title.Size = UDim2.new(1,0,0,30)
-title.BackgroundTransparency = 1
-title.TextColor3 = THEME.text
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
+-- Layout: sidebar + content
+local bar = Instance.new("Frame", win)
+bar.Size = UDim2.new(0, 190, 1, -34)
+bar.Position = UDim2.new(0, 0, 0, 34)
+bar.BackgroundColor3 = THEME.bgPanel
+bar.BorderSizePixel = 0
 
--- Container
-local container = Instance.new("Frame", win)
-container.Size = UDim2.new(1,-20,1,-50)
-container.Position = UDim2.new(0,10,0,40)
-container.BackgroundTransparency = 1
+local barGrad = Instance.new("UIGradient", bar)
+barGrad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 24, 36)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 28, 40))
+}
+barGrad.Rotation = 90
 
-local list = Instance.new("UIListLayout", container)
-list.Padding = UDim.new(0,10)
-list.HorizontalAlignment = Enum.HorizontalAlignment.Center
-list.VerticalAlignment = Enum.VerticalAlignment.Top
+local barList = Instance.new("UIListLayout", bar)
+barList.Padding = UDim.new(0, 10)
+barList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+barList.VerticalAlignment = Enum.VerticalAlignment.Top
 
--- Utility: make toggle row
-local function makeToggle(name, callback)
-    local row = Instance.new("TextButton")
-    row.Size = UDim2.new(1,-20,0,40)
-    row.BackgroundColor3 = THEME.card
-    row.Text = ""
-    row.AutoButtonColor = false
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0,8)
-    local stroke = Instance.new("UIStroke", row); stroke.Color = THEME.stroke; stroke.Thickness = 1
+-- Profile card bottom
+local profileCard = Instance.new("Frame", bar)
+profileCard.Size = UDim2.new(1, -20, 0, 60)
+profileCard.Position = UDim2.new(0, 10, 1, -70)
+profileCard.BackgroundColor3 = THEME.bgCard
+profileCard.AnchorPoint = Vector2.new(0,1)
+Instance.new("UICorner", profileCard).CornerRadius = UDim.new(0, 10)
+local pcStroke = Instance.new("UIStroke", profileCard)
+pcStroke.Color = THEME.stroke
+pcStroke.Transparency = 0.5
+
+local avatar = Instance.new("ImageLabel", profileCard)
+avatar.BackgroundTransparency = 1
+avatar.Size = UDim2.new(0, 36, 0, 36)
+avatar.Position = UDim2.new(0, 10, 0.5, -18)
+avatar.Image = "rbxassetid://4031889928" -- placeholder circle
+local avCorner = Instance.new("UICorner", avatar); avCorner.CornerRadius = UDim.new(1,0)
+
+local uname = Instance.new("TextLabel", profileCard)
+uname.BackgroundTransparency = 1
+uname.Size = UDim2.new(1, -60, 1, 0)
+uname.Position = UDim2.new(0, 56, 0, 0)
+uname.TextXAlignment = Enum.TextXAlignment.Left
+uname.Text = "@"..player.Name
+uname.Font = Enum.Font.GothamSemibold
+uname.TextSize = 14
+uname.TextColor3 = THEME.sub
+
+-- Menu buttons
+local sections = {"Main","Target","Misc","Roles","Webhook","Player","Settings"}
+
+local function makeMenuButton(text, selected)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -20, 0, 36)
+    b.BackgroundColor3 = THEME.bgCard
+    b.Text = text
+    b.TextColor3 = selected and THEME.accent or THEME.text
+    b.Font = Enum.Font.GothamSemibold
+    b.TextSize = 15
+    b.AutoButtonColor = false
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
+    local s = Instance.new("UIStroke", b)
+    s.Color = THEME.stroke
+    s.Transparency = 0.5
+    -- hover
+    b.MouseEnter:Connect(function()
+        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(34, 34, 52)}):Play()
+    end)
+    b.MouseLeave:Connect(function()
+        TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = THEME.bgCard}):Play()
+    end)
+    return b
+end
+
+-- Right content
+local content = Instance.new("Frame", win)
+content.Size = UDim2.new(1, -190, 1, -34)
+content.Position = UDim2.new(0, 190, 0, 34)
+content.BackgroundTransparency = 1
+
+-- Section header
+local header = Instance.new("TextLabel", content)
+header.BackgroundTransparency = 1
+header.Size = UDim2.new(1, -20, 0, 30)
+header.Position = UDim2.new(0, 10, 0, 8)
+header.TextXAlignment = Enum.TextXAlignment.Left
+header.Font = Enum.Font.GothamBold
+header.TextSize = 18
+header.TextColor3 = THEME.text
+header.Text = "Main"
+
+-- Card container (like your screenshots)
+local card = Instance.new("Frame", content)
+card.Size = UDim2.new(1, -40, 1, -70)
+card.Position = UDim2.new(0, 20, 0, 45)
+card.BackgroundColor3 = THEME.bgPanel
+Instance.new("UICorner", card).CornerRadius = UDim.new(0, 14)
+local cardStroke = Instance.new("UIStroke", card)
+cardStroke.Color = THEME.stroke
+cardStroke.Transparency = 0.35
+
+-- List layout inside card
+local cardList = Instance.new("UIListLayout", card)
+cardList.Padding = UDim.new(0, 10)
+cardList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+cardList.VerticalAlignment = Enum.VerticalAlignment.Top
+
+local function hr(parent)
+    local line = Instance.new("Frame", parent)
+    line.Size = UDim2.new(1, -32, 0, 1)
+    line.Position = UDim2.new(0, 16, 0, 0)
+    line.BackgroundColor3 = THEME.stroke
+    line.BackgroundTransparency = 0.2
+end
+
+-- ========== UI Components (visual only) ==========
+local function ToggleRow(parent, labelText, locked)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, -32, 0, 38)
+    row.BackgroundColor3 = THEME.bgCard
+    row.BorderSizePixel = 0
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
 
     local label = Instance.new("TextLabel", row)
-    label.Text = name
     label.BackgroundTransparency = 1
-    label.Position = UDim2.new(0,10,0,0)
-    label.Size = UDim2.new(1,-60,1,0)
+    label.Size = UDim2.new(1, -80, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = labelText .. (locked and "  🔒" or "")
     label.Font = Enum.Font.Gotham
     label.TextSize = 15
     label.TextColor3 = THEME.text
-    label.TextXAlignment = Enum.TextXAlignment.Left
 
-    local indicator = Instance.new("Frame", row)
-    indicator.Size = UDim2.new(0,24,0,24)
-    indicator.Position = UDim2.new(1,-34,0.5,-12)
-    indicator.BackgroundColor3 = THEME.red
-    Instance.new("UICorner", indicator).CornerRadius = UDim.new(1,0)
+    -- switch
+    local switch = Instance.new("TextButton", row)
+    switch.Size = UDim2.new(0, 54, 0, 24)
+    switch.Position = UDim2.new(1, -66, 0.5, -12)
+    switch.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    switch.AutoButtonColor = false
+    switch.Text = ""
+    Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
+
+    local knob = Instance.new("Frame", switch)
+    knob.Size = UDim2.new(0, 20, 0, 20)
+    knob.Position = UDim2.new(0, 2, 0.5, -10)
+    knob.BackgroundColor3 = Color3.fromRGB(210, 210, 230)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
 
     local enabled = false
-    row.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        indicator.BackgroundColor3 = enabled and THEME.green or THEME.red
-        callback(enabled)
+    local function setState(on)
+        enabled = on
+        TweenService:Create(switch, TweenInfo.new(0.18), {
+            BackgroundColor3 = on and THEME.accent or Color3.fromRGB(60,60,80)
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.18), {
+            Position = on and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+        }):Play()
+    end
+    setState(false)
+    switch.MouseButton1Click:Connect(function()
+        if locked then return end -- locked visual
+        setState(not enabled)
     end)
 
     return row
 end
 
--- Features states
-local espEnabled = false
-local grabGun = false
-local antiFling = false
-local flingTarget = nil
-local flingActive = false
+local function SliderRow(parent, labelText, defaultValue)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, -32, 0, 60)
+    row.BackgroundColor3 = THEME.bgCard
+    row.BorderSizePixel = 0
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
 
--- ESP
-local function updateESP()
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= player then
-            local char = plr.Character
-            if char and char:FindFirstChild("Head") then
-                local tag = char.Head:FindFirstChild("ESPTag")
-                if not tag then
-                    tag = Instance.new("BillboardGui", char.Head)
-                    tag.Name = "ESPTag"
-                    tag.Size = UDim2.new(0,200,0,50)
-                    tag.AlwaysOnTop = true
-                    local tl = Instance.new("TextLabel", tag)
-                    tl.Size = UDim2.new(1,0,1,0)
-                    tl.BackgroundTransparency = 1
-                    tl.Font = Enum.Font.GothamBold
-                    tl.TextScaled = true
-                    tl.TextColor3 = THEME.gray
-                    tl.Text = plr.Name
-                end
-                local tl = tag:FindFirstChildOfClass("TextLabel")
-                if espEnabled then
-                    -- role check
-                    local col = THEME.green
-                    local inv = plr:FindFirstChild("Backpack")
-                    if inv then
-                        if inv:FindFirstChild("Knife") then col = THEME.red end
-                        if inv:FindFirstChild("Gun") then col = THEME.blue end
-                    end
-                    tl.TextColor3 = col
-                    tl.Visible = true
-                else
-                    tl.Visible = false
-                end
-            end
+    local label = Instance.new("TextLabel", row)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, -70, 0, 20)
+    label.Position = UDim2.new(0, 12, 0, 6)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = labelText
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 15
+    label.TextColor3 = THEME.text
+
+    local value = Instance.new("TextLabel", row)
+    value.BackgroundTransparency = 1
+    value.Size = UDim2.new(0, 40, 0, 20)
+    value.Position = UDim2.new(1, -50, 0, 6)
+    value.Text = tostring(defaultValue or 0)
+    value.Font = Enum.Font.GothamSemibold
+    value.TextSize = 14
+    value.TextColor3 = THEME.sub
+
+    local bar = Instance.new("Frame", row)
+    bar.Size = UDim2.new(1, -24, 0, 6)
+    bar.Position = UDim2.new(0, 12, 0, 36)
+    bar.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    bar.BorderSizePixel = 0
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new((defaultValue or 0)/100, 0, 1, 0)
+    fill.BackgroundColor3 = THEME.accent2
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    local dragging = false
+    bar.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    bar.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+    bar.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local rel = math.clamp((i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X, 0, 1)
+            fill.Size = UDim2.new(rel, 0, 1, 0)
+            value.Text = tostring(math.floor(rel*100))
         end
-    end
+    end)
+
+    return row
 end
 
-RunService.RenderStepped:Connect(updateESP)
+local function DropdownRow(parent, labelText, placeholder)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, -32, 0, 38)
+    row.BackgroundColor3 = THEME.bgCard
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", row); st.Color = THEME.stroke; st.Transparency = 0.55
 
--- Grab Gun
-RunService.Heartbeat:Connect(function()
-    if grabGun then
-        local gd = Workspace:FindFirstChild("GunDrop")
-        if gd and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character:MoveTo(gd.Position)
-        end
+    local label = Instance.new("TextLabel", row)
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = (placeholder and (labelText.." • "..placeholder)) or labelText
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 15
+    label.TextColor3 = THEME.text
+
+    local grid = Instance.new("TextLabel", row)
+    grid.BackgroundTransparency = 1
+    grid.Size = UDim2.new(0, 28, 0, 28)
+    grid.Position = UDim2.new(1, -38, 0.5, -14)
+    grid.Text = "▦"
+    grid.TextSize = 18
+    grid.TextColor3 = THEME.sub
+    grid.Font = Enum.Font.GothamBold
+
+    return row
+end
+
+-- ========== BUILD SECTIONS ==========
+local panels = {} -- [name] = function to (re)build rows
+
+local function clearCard()
+    for _,c in ipairs(card:GetChildren()) do
+        if c:IsA("GuiObject") then c:Destroy() end
     end
-end)
+    -- re-add layout
+    cardList = Instance.new("UIListLayout", card)
+    cardList.Padding = UDim.new(0, 10)
+end
 
--- AntiFling
-RunService.Stepped:Connect(function()
-    if antiFling and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = player.Character.HumanoidRootPart
-        hrp.Velocity = Vector3.new()
-        hrp.RotVelocity = Vector3.new()
-    end
-end)
+panels.Main = function()
+    header.Text = "Main"
+    clearCard()
+    ToggleRow(card, "Auto Farm", false)
+    DropdownRow(card, "Farm Mode", "Nearest")
+    ToggleRow(card, "Automatically Grab Gun", false)
+    ToggleRow(card, "Dodge Thrown Knife", true) -- locked visuel
+    ToggleRow(card, "Auto End Round", false)
+    hr(card)
+    DropdownRow(card, "Teleport To Lobby", nil)
+    DropdownRow(card, "Teleport To Map", nil)
+end
 
--- Fling system
-local function flingPlayer(target)
-    if not target or not target.Character then return end
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    local thrp = target.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp or not thrp then return end
-    spawn(function()
-        while flingActive and target and target.Character and thrp.Parent do
-            hrp.CFrame = thrp.CFrame * CFrame.new(0,0,1)
-            hrp.Velocity = Vector3.new(9999,9999,9999)
-            task.wait()
+panels.Target = function()
+    header.Text = "Target"
+    clearCard()
+    DropdownRow(card, "Target", "username")
+    ToggleRow(card, "Fling Target", false)
+    ToggleRow(card, "Spectate Target", false)
+    ToggleRow(card, "Loop Go To Target", false)
+    DropdownRow(card, "Teleport To Target", nil)
+end
+
+panels.Misc = function()
+    header.Text = "Misc"
+    clearCard()
+    ToggleRow(card, "Player Chams", false)
+    ToggleRow(card, "Gun Cham", false)
+    ToggleRow(card, "3DRendering", false)
+    ToggleRow(card, "Name ESP", false)
+    hr(card)
+    DropdownRow(card, "Emote", "ninja")
+    ToggleRow(card, "Auto Emote", false)
+end
+
+panels.Roles = function()
+    header.Text = "Roles"
+    clearCard()
+    ToggleRow(card, "Kill Aura", false)
+    SliderRow(card, "Aura Distance", 5)
+    ToggleRow(card, "Auto Kill All", false)
+    ToggleRow(card, "Silent Aim", false)
+    ToggleRow(card, "Kill Murderer [Locked]", true)
+    ToggleRow(card, "Auto Shoot Murderer", false)
+    DropdownRow(card, "Shoot Murderer", nil)
+end
+
+panels.Webhook = function()
+    header.Text = "Webhook"
+    clearCard()
+    DropdownRow(card, "Webhook", "Webhook")
+    hr(card)
+    ToggleRow(card, "Coin Tracker", false)
+    DropdownRow(card, "Minutes To Send Webhook", "minutes")
+    ToggleRow(card, "Unbox Notification [Locked]", true)
+end
+
+panels.Player = function()
+    header.Text = "Player"
+    clearCard()
+    ToggleRow(card, "Walk Speed", false)
+    SliderRow(card, "Walk Speed", 16)
+    ToggleRow(card, "Jump Power", false)
+    SliderRow(card, "Jump Power", 50)
+    hr(card)
+    ToggleRow(card, "Invisible [FE] [Locked]", true)
+    ToggleRow(card, "Anti Fling", false)
+end
+
+panels.Settings = function()
+    header.Text = "Settings"
+    clearCard()
+    ToggleRow(card, "Auto Save Settings", false)
+    ToggleRow(card, "Auto ReExecute", false)
+    ToggleRow(card, "Auto Rejoin", false)
+    DropdownRow(card, "Rejoin Server", nil)
+    DropdownRow(card, "Server Hop", nil)
+    DropdownRow(card, "Donate", nil)
+end
+
+-- Create menu and navigation
+local current = "Main"
+for i,sec in ipairs(sections) do
+    local b = makeMenuButton(sec, sec == current)
+    b.Parent = bar
+    b.MouseButton1Click:Connect(function()
+        -- recolor all
+        for _,btn in ipairs(bar:GetChildren()) do
+            if btn:IsA("TextButton") then
+                btn.TextColor3 = THEME.text
+            end
         end
+        b.TextColor3 = THEME.accent
+        current = sec
+        panels[sec]()
     end)
 end
 
--- UI setup
-makeToggle("Player ESP", function(on) espEnabled = on end).Parent = container
-makeToggle("Grab Gun", function(on) grabGun = on end).Parent = container
-makeToggle("Anti Fling", function(on) antiFling = on end).Parent = container
+-- initial panel
+panels[current]()
 
--- Dropdown fling
-local dd = Instance.new("TextButton", container)
-dd.Size = UDim2.new(1,-20,0,40)
-dd.BackgroundColor3 = THEME.card
-dd.Text = "Select target"
-dd.Font = Enum.Font.Gotham
-dd.TextSize = 15
-dd.TextColor3 = THEME.text
-Instance.new("UICorner", dd).CornerRadius = UDim.new(0,8)
-
-local menu = Instance.new("Frame", container)
-menu.Size = UDim2.new(1,-20,0,120)
-menu.BackgroundColor3 = THEME.card
-menu.Visible = false
-Instance.new("UICorner", menu).CornerRadius = UDim.new(0,8)
-
-local list2 = Instance.new("UIListLayout", menu)
-list2.Padding = UDim.new(0,5)
-
-dd.MouseButton1Click:Connect(function()
-    menu.Visible = not menu.Visible
-    menu:ClearAllChildren()
-    local l = Instance.new("UIListLayout", menu); l.Padding = UDim.new(0,5)
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= player then
-            local b = Instance.new("TextButton", menu)
-            b.Size = UDim2.new(1,-10,0,30)
-            b.Text = plr.Name
-            b.BackgroundColor3 = THEME.bg
-            b.TextColor3 = THEME.text
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 14
-            b.MouseButton1Click:Connect(function()
-                flingTarget = plr
-                dd.Text = "Target: "..plr.Name
-                menu.Visible = false
-            end)
-        end
+-- CTRL to hide/show UI (others scripts unaffected)
+local visible = true
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+        visible = not visible
+        gui.Enabled = visible
     end
 end)
-
-makeToggle("Fling Target", function(on)
-    flingActive = on
-    if on and flingTarget then
-        flingPlayer(flingTarget)
-    end
-end).Parent = container

@@ -1,41 +1,200 @@
-# Compiled Lua sources
-luac.out
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+-- Remotes
+local Remotes = ReplicatedStorage:FindFirstChild("TradeRemotes") or Instance.new("Folder", ReplicatedStorage)
+Remotes.Name = "TradeRemotes"
+local RequestTrade = Remotes:FindFirstChild("RequestTrade") or Instance.new("RemoteEvent", Remotes)
+RequestTrade.Name = "RequestTrade"
+local RespondTrade = Remotes:FindFirstChild("RespondTrade") or Instance.new("RemoteEvent", Remotes)
+RespondTrade.Name = "RespondTrade"
+local UpdateOffer  = Remotes:FindFirstChild("UpdateOffer") or Instance.new("RemoteEvent", Remotes)
+UpdateOffer.Name = "UpdateOffer"
+local ToggleReady  = Remotes:FindFirstChild("ToggleReady") or Instance.new("RemoteEvent", Remotes)
+ToggleReady.Name = "ToggleReady"
+local ConfirmTrade = Remotes:FindFirstChild("ConfirmTrade") or Instance.new("RemoteEvent", Remotes)
+ConfirmTrade.Name = "ConfirmTrade"
+local CancelTrade  = Remotes:FindFirstChild("CancelTrade") or Instance.new("RemoteEvent", Remotes)
+CancelTrade.Name = "CancelTrade"
 
-# Object files
-*.o
-*.os
-*.ko
-*.obj
-*.elf
+-- État des trades
+local Trades = {} -- [player] = {other=Player, offers={[player]={items={},locked=false,ready=false}}, stage="offer|confirm", startedAt=tick()}
 
-# Precompiled Headers
-*.gch
-*.pch
+local TRADE_TIMEOUT = 120 -- s
+local function clearTrade(p)
+    local t = Trades[p]
+    if not t then return end
+    local other = t.other
+    Trades[p] = nil
+    if other then
+        Trades[other] = nil
+    end
+end
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-*.def
-*.exp
+local function validateToolOwnership(player, toolName)
+    -- Vérifie que l’outil est bien dans Backpack OU StarterGear du joueur
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack and backpack:FindFirstChild(toolName) then return true end
+    local gear = player:FindFirstChild("StarterGear")
+    if gear and gear:FindFirstChild(toolName) then return true end
+    return false
+end
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+-- Demande d’ouverture
+RequestTrade.OnServerEvent:Connect(function(p1, p2UserId)
+    local p2 = Players:GetPlayerByUserId(p2UserId)
+    if not p2 or p1 == p2 then return end
+    if Trades[p1] or Trades[p2] then return end
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+    Trades[p1] = {other = p2, offers = {}, stage = "offer", startedAt = tick()}
+    Trades[p2] = {other = p1, offers = Trades[p1].offers, stage = "offer", startedAt = Trades[p1].startedAt}
+    Trades[p1].offers[p1] = {items = {}, locked=false, ready=false}
+    Trades[p1].offers[p2] = {items = {}, locked=false, ready=false}
 
+    -- Notifie les clients d’un nouveau trade (à implémenter côté client)
+    -- (Par ex. ouvrir l’UI chez les deux)
+end)
+
+-- Accept/refuse côté invité
+RespondTrade.OnServerEvent:Connect(function(p2, accept)
+    local t = Trades[p2]
+    if not t then return end
+    local p1 = t.other
+    if not p1 then return end
+    if not accept then
+        clearTrade(p2)
+        return
+    end
+    -- sinon on laisse en stage "offer"
+end)
+
+-- Ajout/suppression d’items (uniquement si non verrouillé)
+UpdateOffer.OnServerEvent:Connect(function(p, action, toolName)
+    local t = Trades[p]
+    if not t or t.stage ~= "offer" then return end
+    local my = t.offers[p]
+    if not my or my.locked then return end
+
+    if action == "add" then
+        if validateToolOwnership(p, toolName) then
+            my.items[toolName] = true
+        end
+    elseif action == "remove" then
+        my.items[toolName] = nil
+    end
+
+    -- reset ready si l’offre change
+    my.ready = false
+    local other = t.other
+    t.offers[other].ready = false
+end)
+
+-- Le joueur indique prêt (verrouille son offre)
+ToggleReady.OnServerEvent:Connect(function(p, ready)
+    local t = Trades[p]
+    if not t or t.stage ~= "offer" then return end
+    local my = t.offers[p]
+    if not my then return end
+
+    -- Revalider les items (toujours possédés)
+    for toolName,_ in pairs(my.items) do
+        if not validateToolOwnership(p, toolName) then
+            my.items[toolName] = nil
+        end
+    end
+
+    my.ready = ready and (next(my.items) ~= nil) or false
+    my.locked = my.ready
+
+    local other = t.other
+    if my.ready and t.offers[other].ready then
+        t.stage = "confirm"
+        -- Notifier les 2 clients : passer à l’écran de confirmation
+    end
+end)
+
+-- Double confirmation (phase finale)
+ConfirmTrade.OnServerEvent:Connect(function(p, confirm)
+    local t = Trades[p]
+    if not t or t.stage ~= "confirm" then return end
+    local my = t.offers[p]
+    my.confirm = (confirm == true)
+
+    local other = t.other
+    local their = t.offers[other]
+    if my.confirm and their.confirm then
+        -- Échange atomique : revalider propriété + transférer
+        for toolName,_ in pairs(t.offers[p].items) do
+            if not validateToolOwnership(p, toolName) then return clearTrade(p) end
+        end
+        for toolName,_ in pairs(t.offers[other].items) do
+            if not validateToolOwnership(other, toolName) then return clearTrade(p) end
+        end
+
+        local function move(playerFrom, playerTo, toolName)
+            local backpack = playerFrom:FindFirstChild("Backpack")
+            if backpack then
+                local tool = backpack:FindFirstChild(toolName)
+                if tool then tool.Parent = playerTo:FindFirstChild("Backpack") end
+            end
+            -- (Optionnel) StarterGear sync si besoin
+        end
+
+        for toolName,_ in pairs(t.offers[p].items) do
+            move(p, other, toolName)
+        end
+        for toolName,_ in pairs(t.offers[other].items) do
+            move(other, p, toolName)
+        end
+
+        -- (Optionnel) Logger le trade
+        -- print(("[TRADE] %s <-> %s"):format(p.Name, other.Name))
+
+        clearTrade(p)
+    end
+end)
+
+-- Annulation
+CancelTrade.OnServerEvent:Connect(function(p)
+    if Trades[p] then clearTrade(p) end
+end)
+
+-- Timeout
+task.spawn(function()
+    while true do
+        for pl,t in pairs(Trades) do
+            if tick() - (t.startedAt or 0) > TRADE_TIMEOUT then
+                clearTrade(pl)
+            end
+        end
+        task.wait(2)
+    end
+end)
+-- StarterPlayerScripts/TradeClient.client.lua
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("TradeRemotes")
+
+-- Exemples d’appels (à relier à ton UI):
+-- Demander un trade
+-- Remotes.RequestTrade:FireServer(targetUserId)
+
+-- Le joueur invité accepte/refuse
+-- Remotes.RespondTrade:FireServer(true)  -- accepter
+-- Remotes.RespondTrade:FireServer(false) -- refuser
+
+-- Mettre à jour son offre
+-- Remotes.UpdateOffer:FireServer("add", "Knife")
+-- Remotes.UpdateOffer:FireServer("remove", "Knife")
+
+-- Se déclarer prêt (verrouille l’offre)
+-- Remotes.ToggleReady:FireServer(true)   -- prêt
+-- Remotes.ToggleReady:FireServer(false)  -- pas prêt
+
+-- Confirmer à l’étape finale (double confirmation)
+-- Remotes.ConfirmTrade:FireServer(true)
+-- Remotes.ConfirmTrade:FireServer(false)
+
+-- Annuler
+-- Remotes.CancelTrade:FireServer()

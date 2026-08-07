@@ -10,8 +10,8 @@ local _data = {
     ["Gun"] = "Gun",
     ["Effect"] = "None",
     ["MorphType"] = "Custom",
-    ["Morph"] = 11,
-    ["NPCs"] = 0,
+    ["Morph"] = 1,
+    ["NPCs"] = 10,
     ["CustomNPCs"] = nil,
     ["MurdererSettings"] = nil,
     ["SheriffSettings"] = nil,
@@ -25,70 +25,70 @@ local _data = {
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 2,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 3,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 4,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 5,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 6,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 7,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 8,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 9,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 10,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 11,
+            ["Morph"] = 1,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",

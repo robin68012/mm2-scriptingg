@@ -10,8 +10,8 @@ local _data = {
     ["Gun"] = "Gun",
     ["Effect"] = "None",
     ["MorphType"] = "Custom",
-    ["Morph"] = 1,
-    ["NPCs"] = 10,
+    ["Morph"] = 11,
+    ["NPCs"] = 0,
     ["CustomNPCs"] = nil,
     ["MurdererSettings"] = nil,
     ["SheriffSettings"] = nil,
@@ -125,6 +125,11 @@ local function a()
         end
     end
 end
+
+p.PlayerGui.HUD:GetPropertyChangedSignal("Enabled"):Connect(function()
+    wait(2)
+    a()
+end)
 
 -- Gestion des personnages
 local function onCharacterAdded(newCharacter)

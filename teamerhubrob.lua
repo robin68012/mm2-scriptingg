@@ -12,7 +12,10 @@ local _data = {
     ["MorphType"] = "Custom",
     ["Morph"] = 1,
     ["NPCs"] = 0,
-
+    ["CustomNPCs"] = nil,
+    ["MurdererSettings"] = nil,
+    ["SheriffSettings"] = nil,
+    ["TrainerSettings"] = nil,
     ["CustomNPCs"] = {
         {
             ["Morph"] = 1,
@@ -91,19 +94,16 @@ local _data = {
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         }
-    }
-
+    },
     ["MurdererSettings"] = {
         ["DualWield"] = false,
         ["Stabbing"] = true,
         ["ThrowAccuracy"] = "OFF"
     },
-
     ["SheriffSettings"] = {
         ["AutoShoot"] = false,
         ["ShotAccuracy"] = "Straight"
     },
-
     ["TrainerSettings"] = {
         ["Mini"] = false,
         ["SpawnWithGun"] = true
@@ -111,9 +111,10 @@ local _data = {
 }
 
 local function a()
+    p.PlayerGui.HUD.Visible = false
     game.ReplicatedStorage.Events.RemoteEvents.StartTraining:FireServer(_data)
     while wait(1) do
-        for _, r in pairs(workspace.Rigs:GetChildren()) do
+        for _, r in game.Workspace.Rigs:GetChildren() do
             if r:FindFirstChild("HumanoidRootPart") then
                 if c:FindFirstChild("Knife") then
                     r.HumanoidRootPart.Position = c.Knife.Handle.Position
@@ -133,3 +134,4 @@ local function onCharacterAdded(newCharacter)
 end
 
 p.CharacterAdded:Connect(onCharacterAdded)
+a()

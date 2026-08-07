@@ -113,7 +113,7 @@ local _data = {
 local function a()
     game.ReplicatedStorage.Events.RemoteEvents.StartTraining:FireServer(_data)
     while wait(1) do
-        for _, r in workspace.Rigs:GetChildren() do
+        for _, r in pairs(workspace.Rigs:GetChildren()) do
             if r:FindFirstChild("HumanoidRootPart") then
                 if c:FindFirstChild("Knife") then
                     r.HumanoidRootPart.Position = c.Knife.Handle.Position

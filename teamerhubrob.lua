@@ -1,8 +1,8 @@
 local p = game.Players.LocalPlayer
-local c = p.Character or p.CharacterAdded:Wait()
+local c = p.Character
 
 local _data = {
-    ["Trainer"] = "Standing Still",
+    ["Trainer"] = "Chasing",
     ["Role"] = "Sheriff",
     ["Movement"] = "None",
     ["Perk"] = "None",

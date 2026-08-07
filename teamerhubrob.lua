@@ -111,7 +111,7 @@ local _data = {
 }
 
 local function a()
-    p.PlayerGui.HUD.Visible = false
+    p.PlayerGui.HUD.Enabled = false
     game.ReplicatedStorage.Events.RemoteEvents.StartTraining:FireServer(_data)
     while wait(1) do
         for _, r in game.Workspace.Rigs:GetChildren() do

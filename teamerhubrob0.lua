@@ -18,78 +18,78 @@ local _data = {
     ["TrainerSettings"] = nil,
     ["CustomNPCs"] = {
         {
-            ["Morph"] = 1,
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
+            ["Knife"] = "Knife",
+            ["Gun"] = "Gun",
+            ["Effect"] = "None"
+        },
+        {
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
+            ["Knife"] = "Knife",
+            ["Gun"] = "Gun",
+            ["Effect"] = "None"
+        },
+        {
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
+            ["Knife"] = "Knife",
+            ["Gun"] = "Gun",
+            ["Effect"] = "None"
+        },
+        {
+            ["Morph"] = 2370418052,
             ["Default"] = "Roblox",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
             ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
         },
         {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
-            ["Knife"] = "Knife",
-            ["Gun"] = "Gun",
-            ["Effect"] = "None"
-        },
-        {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
-            ["Knife"] = "Knife",
-            ["Gun"] = "Gun",
-            ["Effect"] = "None"
-        },
-        {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
-            ["Knife"] = "Knife",
-            ["Gun"] = "Gun",
-            ["Effect"] = "None"
-        },
-        {
-            ["Morph"] = 1,
-            ["Default"] = "Roblox",
+            ["Morph"] = 2370418052,
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"

@@ -40,7 +40,7 @@ local _data = {
         },
         {
             ["Morph"] = 2370418052,
-            ["Default"] = "Roblox",
+            ["Default"] = "L0u_Max",
             ["Knife"] = "Knife",
             ["Gun"] = "Gun",
             ["Effect"] = "None"
